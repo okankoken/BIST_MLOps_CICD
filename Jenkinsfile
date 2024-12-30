@@ -1,25 +1,47 @@
 pipeline {
     agent any
+
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/okankoken/BIST_MLops.git'
+                // Gitea repository'sini klonlamak için doğru URL ve credentials
+                git url: 'http://localhost:3000/jenkins/BIST_MLOps_CICD.git', 
+                    branch: 'main', 
+                    credentialsId: 'gitea-credentials'
             }
         }
+
         stage('Build Docker Image') {
             steps {
+                echo 'Building Docker Image...'
                 sh 'docker build -t bist-mlops-api .'
             }
         }
+
         stage('Run API Tests') {
             steps {
-                sh 'docker run --rm bist-mlops-api python scripts/model_training.py'
+                echo 'Running API Tests...'
+                sh 'python -m unittest discover tests'
             }
         }
+
         stage('Deploy API') {
             steps {
-                sh 'docker run -d -p 8000:8000 --name bist-mlops bist-mlops-api'
+                echo 'Deploying API...'
+                sh 'docker run -d -p 8000:8000 bist-mlops-api'
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed.'
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed. Check the logs.'
         }
     }
 }
