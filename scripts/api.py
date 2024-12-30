@@ -6,8 +6,8 @@ import pandas as pd
 app = FastAPI()
 
 # Model ve veri yollari
-model_path = "/home/train/mlops4/BIST_MLops/models/model_training.pkl"
-data_path = "/home/train/mlops4/BIST_MLops/data/bist_tum_hisseler_temizlenmis.csv"
+model_path = "./models/model_training.pkl"
+data_path = "./data/bist_tum_hisseler_temizlenmis.csv"
 
 # Model ve veri setini yukleme
 model = joblib.load(model_path)
