@@ -7,19 +7,17 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', 
-                    url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git',
-                    credentialsId: 'gitea-credentials'
+                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git', credentialsId: 'gitea-credentials'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${env.DOCKER_IMAGE} .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
         stage('Run API Tests') {
             steps {
-                sh 'docker run -d --name ${env.DOCKER_CONTAINER} -p 8010:8010 ${env.DOCKER_IMAGE}'
+                sh 'docker run -d --name $DOCKER_CONTAINER -p 8010:8010 $DOCKER_IMAGE'
                 sh 'sleep 5' // Ensure container is up
                 sh 'curl http://localhost:8010/' // Test if API is running
             }
@@ -32,10 +30,8 @@ pipeline {
     }
     post {
         always {
-            script {
-                sh 'docker stop ${env.DOCKER_CONTAINER} || true'
-                sh 'docker rm ${env.DOCKER_CONTAINER} || true'
-            }
+            sh 'docker stop $DOCKER_CONTAINER || true'
+            sh 'docker rm $DOCKER_CONTAINER || true'
         }
     }
 }
