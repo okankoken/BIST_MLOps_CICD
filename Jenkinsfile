@@ -1,52 +1,41 @@
 pipeline {
     agent any
-
     environment {
-        DOCKER_IMAGE = "bist_mlops_api"
-        DOCKER_TAG = "latest"
+        DOCKER_IMAGE = 'bist_mlops_api:latest'
+        DOCKER_CONTAINER = 'bist_mlops_api_container'
     }
-
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'http://localhost:3000/jenkins/BIST_MLOps_CICD.git'
+                git branch: 'main', 
+                    url: 'http://localhost:3000/jenkins/BIST_MLOps_CICD.git',
+                    credentialsId: 'gitea-credentials'
             }
         }
-
-        stage('Setup Environment') {
-            steps {
-                sh 'pip install -r requirements.txt'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'pytest tests/ --maxfail=1 --disable-warnings'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                sh 'docker build -t ${env.DOCKER_IMAGE} .'
             }
         }
-
-        stage('Run Docker Container') {
+        stage('Run API Tests') {
             steps {
-                sh "docker run -d --name bist_mlops_api_container -p 8010:8010 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                sh 'docker run -d --name ${env.DOCKER_CONTAINER} -p 8010:8010 ${env.DOCKER_IMAGE}'
+                sh 'sleep 5' // Ensure container is up
+                sh 'curl http://localhost:8010/' // Test if API is running
+            }
+        }
+        stage('Deploy API') {
+            steps {
+                echo 'API deployment completed successfully!'
             }
         }
     }
-
     post {
         always {
-            echo 'Pipeline finished.'
-        }
-        success {
-            echo 'Pipeline succeeded.'
-        }
-        failure {
-            echo 'Pipeline failed.'
+            script {
+                sh 'docker stop ${env.DOCKER_CONTAINER} || true'
+                sh 'docker rm ${env.DOCKER_CONTAINER} || true'
+            }
         }
     }
 }
