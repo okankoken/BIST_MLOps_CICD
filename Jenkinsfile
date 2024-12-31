@@ -7,17 +7,27 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git', credentialsId: 'gitea-credentials'
+                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t ${DOCKER_IMAGE} .'
             }
         }
         stage('Run API Tests') {
             steps {
-                sh 'docker run -d --name $DOCKER_CONTAINER -p 8010:8010 $DOCKER_IMAGE'
+                script {
+                    // Check if the container exists, and stop/remove it if it does
+                    sh """
+                    if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                        docker stop ${DOCKER_CONTAINER} || true
+                        docker rm ${DOCKER_CONTAINER} || true
+                    fi
+                    """
+                    // Run the container
+                    sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
+                }
                 sh 'sleep 5' // Ensure container is up
                 sh 'curl http://localhost:8010/' // Test if API is running
             }
@@ -30,8 +40,13 @@ pipeline {
     }
     post {
         always {
-            sh 'docker stop $DOCKER_CONTAINER || true'
-            sh 'docker rm $DOCKER_CONTAINER || true'
+            // Stop and remove the container after pipeline finishes
+            sh """
+            if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                docker stop ${DOCKER_CONTAINER} || true
+                docker rm ${DOCKER_CONTAINER} || true
+            fi
+            """
         }
     }
 }
