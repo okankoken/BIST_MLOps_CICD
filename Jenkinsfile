@@ -18,30 +18,22 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Check if the container exists, stop and remove if needed
+                    // Stop and remove existing container if exists
                     sh """
                     if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                        echo "Container ${DOCKER_CONTAINER} already exists."
-                        docker stop ${DOCKER_CONTAINER} || true
-                        docker rm ${DOCKER_CONTAINER} || true
+                        docker stop ${DOCKER_CONTAINER}
+                        docker rm ${DOCKER_CONTAINER}
                     fi
                     """
-                    // Run a new container
+                    // Run container
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
-                // Wait for the container to start and API to be ready
-                sh """
+                sh '''
+                echo Waiting for API to be ready...
                 for i in {1..10}; do
-                    if curl --silent --fail http://localhost:8010/; then
-                        echo "API is ready."
-                        exit 0
-                    fi
-                    echo "Waiting for API to be ready..."
-                    sleep 5
+                    curl --silent --fail http://localhost:8010/ && break || sleep 5
                 done
-                echo "API did not become ready in time."
-                exit 1
-                """
+                '''
             }
         }
         stage('Deploy API') {
@@ -52,11 +44,11 @@ pipeline {
     }
     post {
         always {
-            // Stop the container after pipeline finishes
+            // Stop container but do not remove it
             sh """
             if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                echo "Stopping container ${DOCKER_CONTAINER}."
-                docker stop ${DOCKER_CONTAINER} || true
+                echo Stopping container ${DOCKER_CONTAINER}.
+                docker stop ${DOCKER_CONTAINER}
             fi
             """
         }
