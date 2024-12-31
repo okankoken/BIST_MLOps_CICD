@@ -18,29 +18,30 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Check if the container exists, and stop/remove it if it does
-                    sh '''
-                    if [ $(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                    // Check if the container exists, and stop it if it does
+                    sh """
+                    if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                         docker stop ${DOCKER_CONTAINER} || true
-                        docker rm ${DOCKER_CONTAINER} || true
                     fi
-                    '''
+                    """
                     // Run the container
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
-                    
-                    // Wait for the container to be ready
-                    sh '''
-                    for i in {1..10}; do
-                        if curl --silent --fail http://localhost:8010/; then
+                }
+                script {
+                    // Wait for API to be ready
+                    def retries = 10
+                    def waitTime = 5 // seconds
+                    for (int i = 0; i < retries; i++) {
+                        if (sh(script: 'curl --silent --fail http://localhost:8010/', returnStatus: true) == 0) {
                             echo "API is up and running!"
-                            exit 0
-                        fi
+                            break
+                        }
                         echo "Waiting for API to be ready..."
-                        sleep 5
-                    done
-                    echo "API did not become ready in time."
-                    exit 1
-                    '''
+                        sleep waitTime
+                    }
+                    if (sh(script: 'curl --silent --fail http://localhost:8010/', returnStatus: true) != 0) {
+                        error "API did not become ready in time."
+                    }
                 }
             }
         }
@@ -52,13 +53,12 @@ pipeline {
     }
     post {
         always {
-            // Stop and remove the container after pipeline finishes
-            sh '''
-            if [ $(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+            // Stop the container after pipeline finishes, but do not remove it
+            sh """
+            if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                 docker stop ${DOCKER_CONTAINER} || true
-                docker rm ${DOCKER_CONTAINER} || true
             fi
-            '''
+            """
         }
     }
 }
