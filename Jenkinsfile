@@ -19,17 +19,29 @@ pipeline {
             steps {
                 script {
                     // Check if the container exists, and stop/remove it if it does
-                    sh """
-                    if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                    sh '''
+                    if [ $(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                         docker stop ${DOCKER_CONTAINER} || true
                         docker rm ${DOCKER_CONTAINER} || true
                     fi
-                    """
+                    '''
                     // Run the container
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
+                    
+                    // Wait for the container to be ready
+                    sh '''
+                    for i in {1..10}; do
+                        if curl --silent --fail http://localhost:8010/; then
+                            echo "API is up and running!"
+                            exit 0
+                        fi
+                        echo "Waiting for API to be ready..."
+                        sleep 5
+                    done
+                    echo "API did not become ready in time."
+                    exit 1
+                    '''
                 }
-                sh 'sleep 5' // Ensure container is up
-                sh 'curl http://localhost:8010/' // Test if API is running
             }
         }
         stage('Deploy API') {
@@ -41,12 +53,12 @@ pipeline {
     post {
         always {
             // Stop and remove the container after pipeline finishes
-            sh """
-            if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+            sh '''
+            if [ $(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                 docker stop ${DOCKER_CONTAINER} || true
                 docker rm ${DOCKER_CONTAINER} || true
             fi
-            """
+            '''
         }
     }
 }
