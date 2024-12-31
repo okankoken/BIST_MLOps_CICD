@@ -18,7 +18,7 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Check if the container exists
+                    // Check if the container exists, stop and remove if needed
                     sh """
                     if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                         echo "Container ${DOCKER_CONTAINER} already exists."
@@ -29,15 +29,18 @@ pipeline {
                     // Run a new container
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
-                // Wait for the container to start
-                sh 'sleep 5'
-                // Test if the API is running
+                // Wait for the container to start and API to be ready
                 sh """
-                if ! curl --silent --fail http://localhost:8010/; then
-                    echo "API did not become ready in time."
-                    exit 1
-                fi
-                echo "API is running successfully."
+                for i in {1..10}; do
+                    if curl --silent --fail http://localhost:8010/; then
+                        echo "API is ready."
+                        exit 0
+                    fi
+                    echo "Waiting for API to be ready..."
+                    sleep 5
+                done
+                echo "API did not become ready in time."
+                exit 1
                 """
             }
         }
@@ -49,7 +52,7 @@ pipeline {
     }
     post {
         always {
-            // Optionally stop the container without removing it
+            // Stop the container after pipeline finishes
             sh """
             if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
                 echo "Stopping container ${DOCKER_CONTAINER}."
