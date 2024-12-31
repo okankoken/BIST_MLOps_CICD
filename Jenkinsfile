@@ -18,31 +18,27 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Check if the container exists, and stop it if it does
+                    // Check if the container exists
                     sh """
                     if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                        echo "Container ${DOCKER_CONTAINER} already exists."
                         docker stop ${DOCKER_CONTAINER} || true
+                        docker rm ${DOCKER_CONTAINER} || true
                     fi
                     """
-                    // Run the container
+                    // Run a new container
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
-                script {
-                    // Wait for API to be ready
-                    def retries = 10
-                    def waitTime = 5 // seconds
-                    for (int i = 0; i < retries; i++) {
-                        if (sh(script: 'curl --silent --fail http://localhost:8010/', returnStatus: true) == 0) {
-                            echo "API is up and running!"
-                            break
-                        }
-                        echo "Waiting for API to be ready..."
-                        sleep waitTime
-                    }
-                    if (sh(script: 'curl --silent --fail http://localhost:8010/', returnStatus: true) != 0) {
-                        error "API did not become ready in time."
-                    }
-                }
+                // Wait for the container to start
+                sh 'sleep 5'
+                // Test if the API is running
+                sh """
+                if ! curl --silent --fail http://localhost:8010/; then
+                    echo "API did not become ready in time."
+                    exit 1
+                fi
+                echo "API is running successfully."
+                """
             }
         }
         stage('Deploy API') {
@@ -53,9 +49,10 @@ pipeline {
     }
     post {
         always {
-            // Stop the container after pipeline finishes, but do not remove it
+            // Optionally stop the container without removing it
             sh """
             if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                echo "Stopping container ${DOCKER_CONTAINER}."
                 docker stop ${DOCKER_CONTAINER} || true
             fi
             """
