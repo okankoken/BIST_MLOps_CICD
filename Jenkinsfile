@@ -18,29 +18,31 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Stop and remove existing container if exists
+                    // Var olan konteyneri durdur ve kaldir
                     sh """
                     if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                        docker stop ${DOCKER_CONTAINER}
-                        docker rm ${DOCKER_CONTAINER}
+                        echo "Stopping and removing existing container..."
+                        docker stop ${DOCKER_CONTAINER} || true
+                        docker rm ${DOCKER_CONTAINER} || true
                     fi
                     """
-                    // Run container
+                    // Yeni konteyneri baslat
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
-                sh '''
-                echo Waiting for API to be ready...
+                // API'nin hazir olup olmadigini kontrol et
+                sh """
+                echo "Waiting for API to be ready..."
                 for i in {1..20}; do
                     if curl --silent --fail http://localhost:8010/; then
-                        echo API is ready!
+                        echo "API is ready!"
                         exit 0
                     fi
-                    echo "API not ready, retrying in 5 seconds..."
+                    echo "API not ready yet. Retrying in 5 seconds..."
                     sleep 5
                 done
-                echo "API did not become ready in time."
+                echo "API did not become ready in time. Exiting..."
                 exit 1
-                '''
+                """
             }
         }
         stage('Deploy API') {
@@ -51,13 +53,7 @@ pipeline {
     }
     post {
         always {
-            // Stop container but do not remove it
-            sh """
-            if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                echo Stopping container ${DOCKER_CONTAINER}.
-                docker stop ${DOCKER_CONTAINER}
-            fi
-            """
+            echo "Pipeline tamamlandi. API çalismaya devam ediyor ve erisilebilir durumda."
         }
     }
 }
