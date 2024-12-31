@@ -27,10 +27,10 @@ https://github.com/okankoken/BIST_MLOps/blob/main/data/bist_tum_hisseler_temizle
 - 3.1. 3 ay  endpoint olacak şekilde bir API geliştiriniz.  --> yapıldı
 - 3.2. 3 ay için bir path veya query parameter olarak kullanılsın. --> yapıldı
 - 3.3. Fast API sonuç olarak istek yapılan 3 aylık tahmini yüzdelik getiri miktarını dönsün. --> yapldı
-- 3.4. Model Concept/Data driftini tespit eden bir mekanizma oluşturunuz.
-- 3.5. Model dağıtımı otomasyonu için Jenkins/Gitea kullanınız.
+- 3.4. Model Concept/Data driftini tespit eden bir mekanizma oluşturunuz. --> drift_detection.py oluşturuldu ama neye yarıyor bilmiyorum.
+- 3.5. Model dağıtımı otomasyonu için Jenkins/Gitea kullanınız. --> gitea reposu oluşturuldu. Jenkins CICD yapılmadı daha
 
 ### 4. Altyapı (Infrastructure)
-- 4.1. Altyapı olarak Docker container kullanınız.
-- 4.2. Veri tabanı olarak mysql kullanınız.
-- 4.3. Tahmin sonuçlarını veri tabanına yazınız.
+- 4.1. Altyapı olarak Docker container kullanınız. --> yapıldı
+- 4.2. Veri tabanı olarak mysql kullanınız. --> yapılacak
+- 4.3. Tahmin sonuçlarını veri tabanına yazınız. --> yapılacak
