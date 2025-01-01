@@ -1,54 +1,48 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE = 'bist_mlops_api:latest'
-        DOCKER_CONTAINER = 'bist_mlops_api_container'
+        API_CONTAINER_NAME = "bist_mlops_api_container"
+        API_PORT = "8010"
     }
     stages {
         stage('Clone Repository') {
             steps {
-                script {
-                    checkout([$class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [],
-                        userRemoteConfigs: [[
-                            url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git',
-                            credentialsId: 'gitea-username-password'
-                        ]]
-                    ])
-                }
+                git credentialsId: 'gitea-username-password', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE} .'
+                sh 'docker build -t bist_mlops_api:latest .'
             }
         }
         stage('Run API Tests') {
             steps {
-                script {
-                    sh """
-                    if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                        docker stop ${DOCKER_CONTAINER} || true
-                        docker rm ${DOCKER_CONTAINER} || true
-                    fi
-                    """
-                    sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
-                }
-                sh 'sleep 5'
-                sh 'curl --silent --fail http://localhost:8010/'
-            }
-        }
-        stage('Deploy API') {
-            steps {
-                echo 'API deployment completed successfully!'
+                // Daha önceki container varsa durdurup sil
+                sh """
+                docker ps -aq -f name=${API_CONTAINER_NAME} | xargs -r docker stop
+                docker ps -aq -f name=${API_CONTAINER_NAME} | xargs -r docker rm
+                """
+                // Yeni container baslat
+                sh "docker run -d --name ${API_CONTAINER_NAME} -p ${API_PORT}:${API_PORT} bist_mlops_api:latest"
+                // Uygulamanin tamamen baslatilmasi için bekle
+                sh 'sleep 15'
+                // Container içini kontrol et
+                sh 'docker ps'
+                sh 'docker logs ${API_CONTAINER_NAME}'
+                // Ag durumunu kontrol et
+                sh 'docker network inspect mlops-net'
+                sh "docker exec jenkins ping -c 3 ${API_CONTAINER_NAME}"
+                // API'yi test et
+                sh "curl -v http://localhost:${API_PORT}/"
             }
         }
     }
     post {
         always {
-            echo "Pipeline tamamlandi. API erisilebilir durumda."
+            echo 'Pipeline tamamlandi.'
+        }
+        failure {
+            echo 'Pipeline basarisiz oldu.'
         }
     }
 }
