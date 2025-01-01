@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git'
+                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git', credentialsId: 'gitea-credentials'
             }
         }
         stage('Build Docker Image') {
