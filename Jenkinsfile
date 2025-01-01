@@ -7,7 +7,16 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git', credentialsId: 'gitea-credentials'
+                script {
+                    // Repository'yi klonlamak için gitea-credentials token'ini kullan
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git',
+                            credentialsId: 'gitea-credentials'
+                        ]]
+                    ])
+                }
             }
         }
         stage('Build Docker Image') {
