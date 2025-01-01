@@ -1,44 +1,39 @@
 pipeline {
     agent any
     environment {
-        GITEA_TOKEN = '191a7cafbd975f568ba18bea6bcf218d1af8c578'
+        DOCKER_IMAGE = 'bist_mlops_api:latest'
+        DOCKER_CONTAINER = 'bist_mlops_api_container'
     }
     stages {
         stage('Clone Repository') {
             steps {
-                script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git',
-                            credentialsId: 'gitea-credentials',
-                            refspec: '+refs/heads/*:refs/remotes/origin/*',
-                            // HTTP Header ile Token ekleme
-                            httpHeaders: [[name: 'Authorization', value: 'token ${env.GITEA_TOKEN}']]
-                        ]]
-                    ])
-                }
+                // Yeni olusturulan credential ID'sini kullanarak repository klonlama
+                git branch: 'main', 
+                    url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git',
+                    credentialsId: 'gitea-username-password'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t bist_mlops_api:latest .'
+                sh 'docker build -t ${DOCKER_IMAGE} .'
             }
         }
         stage('Run API Tests') {
             steps {
                 script {
+                    // Konteyner varsa durdur ve kaldir
                     sh """
-                    if [ \$(docker ps -aq -f name=bist_mlops_api_container) ]; then
-                        docker stop bist_mlops_api_container || true
-                        docker rm bist_mlops_api_container || true
+                    if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
+                        docker stop ${DOCKER_CONTAINER} || true
+                        docker rm ${DOCKER_CONTAINER} || true
                     fi
                     """
-                    sh 'docker run -d --name bist_mlops_api_container -p 8010:8010 bist_mlops_api:latest'
-                    sh 'sleep 5'
-                    sh 'curl --silent --fail http://localhost:8010/'
+                    // Konteyneri yeniden baslat
+                    sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
+                // API'yi test et
+                sh 'sleep 5' // API'nin baslamasini bekle
+                sh 'curl --silent --fail http://localhost:8010/'
             }
         }
         stage('Deploy API') {
