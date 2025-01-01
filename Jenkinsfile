@@ -3,11 +3,12 @@ pipeline {
     environment {
         API_CONTAINER_NAME = "bist_mlops_api_container"
         API_PORT = "8010"
+        NETWORK_NAME = "02_mlops_docker_mlops-net"
     }
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', // Varsayilan branch ayari. Gerekiyorsa master olarak degistirin.
+                git branch: 'main',
                     credentialsId: 'gitea-username-password', 
                     url: 'http://gitea:3000/jenkins/BIST_MLOps_CICD.git'
             }
@@ -27,20 +28,20 @@ pipeline {
                     docker ps -aq -f name=${API_CONTAINER_NAME} | xargs -r docker rm
                     """
                     echo 'Yeni container baslatiliyor...'
-                    sh "docker run -d --name ${API_CONTAINER_NAME} -p ${API_PORT}:${API_PORT} bist_mlops_api:latest"
+                    sh "docker run -d --name ${API_CONTAINER_NAME} --network ${NETWORK_NAME} -p ${API_PORT}:${API_PORT} bist_mlops_api:latest"
+                    
                     echo 'Containerin tamamen baslatilmasi için bekleniyor...'
-                    sh 'sleep 15'
+                    sh 'sleep 30'
 
                     echo 'Container kontrol ediliyor...'
                     sh 'docker ps'
                     sh 'docker logs ${API_CONTAINER_NAME}'
 
                     echo 'Ag baglantisi kontrol ediliyor...'
-                    sh 'docker network inspect mlops-net'
-                    sh "docker exec jenkins ping -c 3 ${API_CONTAINER_NAME}"
+                    sh "docker network inspect ${NETWORK_NAME}"
 
                     echo 'API test ediliyor...'
-                    sh "curl -v http://localhost:${API_PORT}/"
+                    sh "curl -v http://${API_CONTAINER_NAME}:${API_PORT}/"
                 }
             }
         }
