@@ -18,31 +18,19 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    // Var olan konteyneri durdur ve kaldir
+                    // Konteyner varsa durdur ve kaldir
                     sh """
                     if [ \$(docker ps -aq -f name=${DOCKER_CONTAINER}) ]; then
-                        echo "Stopping and removing existing container..."
                         docker stop ${DOCKER_CONTAINER} || true
                         docker rm ${DOCKER_CONTAINER} || true
                     fi
                     """
-                    // Yeni konteyneri baslat
+                    // Konteyneri yeniden baslat
                     sh 'docker run -d --name ${DOCKER_CONTAINER} -p 8010:8010 ${DOCKER_IMAGE}'
                 }
-                // API'nin hazir olup olmadigini kontrol et
-                sh """
-                echo "Waiting for API to be ready..."
-                for i in {1..20}; do
-                    if curl --silent --fail http://localhost:8010/; then
-                        echo "API is ready!"
-                        exit 0
-                    fi
-                    echo "API not ready yet. Retrying in 5 seconds..."
-                    sleep 5
-                done
-                echo "API did not become ready in time. Exiting..."
-                exit 1
-                """
+                // API'yi test et
+                sh 'sleep 5' // API'nin baslamasini bekle
+                sh 'curl --silent --fail http://localhost:8010/'
             }
         }
         stage('Deploy API') {
@@ -53,7 +41,7 @@ pipeline {
     }
     post {
         always {
-            echo "Pipeline tamamlandi. API çalismaya devam ediyor ve erisilebilir durumda."
+            echo "Pipeline tamamlandi. API erisilebilir durumda."
         }
     }
 }
