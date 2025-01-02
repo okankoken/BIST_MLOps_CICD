@@ -4,3 +4,7 @@ joblib
 scikit-learn==1.6.0
 pandas
 numpy
+mlflow>=2.0.0
+pymysql
+mysql-connector-python
+pydantic

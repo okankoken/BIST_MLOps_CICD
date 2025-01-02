@@ -4,6 +4,12 @@ pipeline {
         API_CONTAINER_NAME = "bist_mlops_api_container"
         API_PORT = "8010"
         NETWORK_NAME = "02_mlops_docker_mlops-net"
+        MYSQL_CONTAINER_NAME = "mysql"
+        MYSQL_HOST = "172.18.0.3"
+        MYSQL_PORT = "3306"
+        MLFLOW_CONTAINER_NAME = "mlflow_server"
+        MLFLOW_HOST = "172.18.0.4"
+        MLFLOW_PORT = "5000"
     }
     stages {
         stage('Clone Repository') {
@@ -17,6 +23,27 @@ pipeline {
             steps {
                 echo 'Docker image olusturuluyor...'
                 sh 'docker build -t bist_mlops_api:latest .'
+            }
+        }
+        stage('Run MySQL and MLflow Checks') {
+            steps {
+                script {
+                    echo 'MySQL ve MLflow containerlari kontrol ediliyor...'
+                    
+                    // MySQL kontrolü
+                    sh """
+                    docker inspect -f '{{.State.Running}}' ${MYSQL_CONTAINER_NAME} || 
+                    echo "MySQL container calismiyor!"
+                    """
+                    sh "nc -zv ${MYSQL_HOST} ${MYSQL_PORT}"
+
+                    // MLflow kontrolü
+                    sh """
+                    docker inspect -f '{{.State.Running}}' ${MLFLOW_CONTAINER_NAME} || 
+                    echo "MLflow container calismiyor!"
+                    """
+                    sh "curl -v http://${MLFLOW_HOST}:${MLFLOW_PORT}/"
+                }
             }
         }
         stage('Run API Tests') {
@@ -33,15 +60,19 @@ pipeline {
                     echo 'Containerin tamamen baslatilmasi için bekleniyor...'
                     sh 'sleep 30'
 
-                    echo 'Container kontrol ediliyor...'
-                    sh 'docker ps'
-                    sh 'docker logs ${API_CONTAINER_NAME}'
-
-                    echo 'Ag baglantisi kontrol ediliyor...'
-                    sh "docker network inspect ${NETWORK_NAME}"
-
                     echo 'API test ediliyor...'
                     sh "curl -v http://${API_CONTAINER_NAME}:${API_PORT}/"
+                    sh "curl -v http://${API_CONTAINER_NAME}:${API_PORT}/predict?stock_name=AGROT.IS"
+                }
+            }
+        }
+        stage('Verify MySQL Entries') {
+            steps {
+                script {
+                    echo 'MySQL tahmin kayitlari kontrol ediliyor...'
+                    sh """
+                    docker exec ${MYSQL_CONTAINER_NAME} mysql -u root -pAnkara06 -e "USE mlops_db; SELECT * FROM bist_predictions;"
+                    """
                 }
             }
         }
