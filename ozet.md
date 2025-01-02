@@ -1,4 +1,4 @@
-tekrar özetliyorum:
+Aşağıdaki işlemler proje için ana yapılanlar ve yapılacaklar listesidir: 
 
 yapılmayanları yapalım hadi : 
 
@@ -28,7 +28,8 @@ https://github.com/okankoken/BIST_MLOps/blob/main/data/bist_tum_hisseler_temizle
 - 3.2. 3 ay için bir path veya query parameter olarak kullanılsın. --> yapıldı
 - 3.3. Fast API sonuç olarak istek yapılan 3 aylık tahmini yüzdelik getiri miktarını dönsün. --> yapldı
 - 3.4. Model Concept/Data driftini tespit eden bir mekanizma oluşturunuz. --> drift_detection.py oluşturuldu ama neye yarıyor bilmiyorum.
-- 3.5. Model dağıtımı otomasyonu için Jenkins/Gitea kullanınız. --> gitea reposu oluşturuldu. Jenkins CICD yapılmadı daha
+- 3.5. Model dağıtımı otomasyonu için Jenkins/Gitea kullanınız. --> gitea reposu oluşturuldu. Jenkins CICD yapılmadı daha --> yapildi
+- 3.5. MAkine öğrenmesi modellemesinin MLflow ile takip edilmesi --> yapılacak
 
 ### 4. Altyapı (Infrastructure)
 - 4.1. Altyapı olarak Docker container kullanınız. --> yapıldı
