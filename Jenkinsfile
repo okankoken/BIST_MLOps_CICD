@@ -60,8 +60,29 @@ pipeline {
                     echo 'Containerin tamamen baslatilmasi için bekleniyor...'
                     sh 'sleep 30'
 
+                    echo 'Python kodu hazirlaniyor...'
+                    writeFile file: 'test_mysql_connection.py', text: '''
+import mysql.connector
+try:
+    conn = mysql.connector.connect(
+        host='mysql',
+        user='root',
+        password='Ankara06',
+        database='mlops_db'
+    )
+    print('MySQL baglantisi basarili.')
+except Exception as e:
+    print(f'MySQL baglanti hatasi: {e}')
+finally:
+    if 'conn' in locals():
+        conn.close()
+                    '''
+
+                    echo 'MySQL baglantisi test ediliyor...'
+                    sh "docker cp test_mysql_connection.py ${API_CONTAINER_NAME}:/app/"
+                    sh "docker exec ${API_CONTAINER_NAME} python /app/test_mysql_connection.py"
+
                     echo 'API test ediliyor...'
-                    sh "curl -v http://${API_CONTAINER_NAME}:${API_PORT}/"
                     sh "curl -v http://${API_CONTAINER_NAME}:${API_PORT}/predict?stock_name=AGROT.IS"
                 }
             }
