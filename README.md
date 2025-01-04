@@ -1,100 +1,100 @@
 # BIST MLOps Projesi
 
-Bu proje, **Borsa Istanbul (BIST)** hisselerinin 3 aylik getiri tahminlerini yapmayi, tahmin sonu�larini bir veri tabanina kaydetmeyi ve modeli izlemek i�in MLOps ara�lari kullanmayi ama�lamaktadir. Proje, modern yazilim gelistirme ve veri bilimi prensiplerine dayali olarak insa edilmistir.
+Bu proje, **Borsa İstanbul (BIST)** hisselerinin 3 aylık getiri tahminlerini yapmayı, tahmin sonuçlarını bir veri tabanına kaydetmeyi ve modeli izlemek için MLOps araçları kullanmayı amaçlamaktadır. Proje, modern yazılım geliştirme ve veri bilimi prensiplerine dayalı olarak inşa edilmiştir.
 
 ---
 
-## ?? Proje Yapisi
+## 📂 Proje Yapısı
 
 ```plaintext
 BIST_MLops/
-+-- data/
-�   +-- bist_tum_hisseler_temizlenmis.csv  # Veri seti
-+-- models/
-�   +-- model_training.pkl                # Egitimli model dosyasi
-+-- scripts/
-�   +-- api.py                            # FastAPI uygulamasi
-�   +-- drift_detection.py                # Model ve veri sapma tespiti
-�   +-- mysql_writer.py                   # MySQL baglantisi ve tahmin kaydi
-�   +-- mlflow_logger.py                  # MLflow entegrasyonu
-+-- logs/
-�   +-- drift_detection.log               # Sapma tespiti log dosyasi
-+-- Dockerfile                            # Docker yapilandirmasi
-+-- Jenkinsfile                           # CI/CD pipeline yapilandirmasi
-+-- requirements.txt                      # Proje bagimliliklari
-+-- README.md                             # Proje d�k�mantasyonu
+├── data/
+│   └── bist_tum_hisseler_temizlenmis.csv  # Veri seti
+├── models/
+│   └── model_training.pkl                # Eğitimli model dosyası
+├── scripts/
+│   ├── api.py                            # FastAPI uygulaması
+│   ├── drift_detection.py                # Model ve veri sapma tespiti
+│   ├── mysql_writer.py                   # MySQL bağlantısı ve tahmin kaydı
+│   └── mlflow_logger.py                  # MLflow entegrasyonu
+├── logs/
+│   └── drift_detection.log               # Sapma tespiti log dosyası
+├── Dockerfile                            # Docker yapılandırması
+├── Jenkinsfile                           # CI/CD pipeline yapılandırması
+├── requirements.txt                      # Proje bağımlılıkları
+└── README.md                             # Proje dökümantasyonu
 ```
 
 ---
 
-## ?? Nasil �alistirilir?
+## 🚀 Nasıl Çalıştırılır?
 
 ### 1. Gerekli Ortam Kurulumu
 
-#### a. Bagimliliklari Kurun
+#### a. Bağımlılıkları Kurun
 ```bash
 pip install -r requirements.txt
 ```
 
-#### b. Docker Imajini Olusturun
+#### b. Docker İmajını Oluşturun
 ```bash
 docker build -t bist_mlops_api:latest .
 ```
 
-#### c. Konteyneri �alistirin
+#### c. Konteyneri Çalıştırın
 ```bash
 docker run -d --name bist_mlops_api_container -p 8010:8010 bist_mlops_api:latest
 ```
 
 ---
 
-### 2. API'yi �alistirma
-FastAPI uygulamasi, `/predict` endpoint'ini kullanarak tahmin yapar.
+### 2. API'yi Çalıştırma
+FastAPI uygulaması, `/predict` endpoint'ini kullanarak tahmin yapar.
 
-#### �rnek Istek:
+#### Örnek İstek:
 ```bash
 curl -X GET "http://localhost:8010/predict?stock_name=AGROT.IS"
 ```
 
-#### D�nen �rnek Yanit:
+#### Dönen Örnek Yanıt:
 ```json
 {
   "stock": "AGROT.IS",
   "name": "AG Anadolu Grubu Holding",
   "prediction": "12.34%",
-  "message": "Tahmin basariyla yapildi ve kaydedildi."
+  "message": "Tahmin başarıyla yapıldı ve kaydedildi."
 }
 ```
 
 ---
 
-## ?? �ne �ikan �zellikler
+## 🔍 Öne Çıkan Özellikler
 
-### ?? Model Egitim
+### 📊 Model Eğitim
 - **Model**: Random Forest Regressor
-- **Hedef Degisken**: 3 aylik getiri orani (%).
-- **�zellikler**:
-  - Fiyat/Kazan� Orani
-  - PDDD Orani
-  - Fiyat/Satis Orani
+- **Hedef Değişken**: 3 aylık getiri oranı (%).
+- **Özellikler**:
+  - Fiyat/Kazanç Oranı
+  - PDDD Oranı
+  - Fiyat/Satış Oranı
   - Volatilite
-  - Piyasa Degeri
+  - Piyasa Değeri
   - Son Fiyat
 
 ---
 
-### ?? Drift Detection (Sapma Tespiti)
+### 🔄 Drift Detection (Sapma Tespiti)
 `drift_detection.py` ile:
-- **Feature Drift**: Wasserstein mesafesi ile hesaplanir.
-- **Model Drift**: Egitim ve yeni verinin tahmin hatalari arasindaki fark hesaplanir (MSE).
+- **Feature Drift**: Wasserstein mesafesi ile hesaplanır.
+- **Model Drift**: Eğitim ve yeni verinin tahmin hataları arasındaki fark hesaplanır (MSE).
 
-Sonu�lar `logs/drift_detection.log` dosyasina kaydedilir.
+Sonuçlar `logs/drift_detection.log` dosyasına kaydedilir.
 
 ---
 
-### ??? Tahminlerin Kaydi
-- Tahmin sonu�lari **MySQL veri tabanina** kaydedilir.
-- **Tablo Yapisi**:
+### 🗃️ Tahminlerin Kaydı
+- Tahmin sonuçları **MySQL veri tabanına** kaydedilir.
+- **Tablo Yapısı**:
   ```sql
   CREATE TABLE bist_predictions (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -107,29 +107,29 @@ Sonu�lar `logs/drift_detection.log` dosyasina kaydedilir.
 
 ---
 
-### ?? MLflow Entegrasyonu
-- Tahmin sonu�lari MLflow �zerinde loglanir.
-- **�zellikler**:
-  - Hisse adi (parametre olarak)
+### 📈 MLflow Entegrasyonu
+- Tahmin sonuçları MLflow üzerinde loglanır.
+- **Özellikler**:
+  - Hisse adı (parametre olarak)
   - Tahmin sonucu (metrik olarak)
 
 ---
 
-## ??? CI/CD Pipeline
+## 🛠️ CI/CD Pipeline
 ### Jenkins Pipeline
-1. Repository klonlanir.
-2. Docker imaji olusturulur ve �alistirilir.
+1. Repository klonlanır.
+2. Docker imajı oluşturulur ve çalıştırılır.
 3. **MySQL** ve **MLflow** kontrol edilir.
-4. API istekleri test edilir ve sonu�lar dogrulanir.
+4. API istekleri test edilir ve sonuçlar doğrulanır.
 
 ---
 
-## ?? Gelistirme ve Iyilestirme �nerileri
-- **Daha Fazla Test**: U� senaryolari kapsayan testler eklenebilir.
-- **Loglama**: Yapilandirilmis loglama mekanizmalari g��lendirilebilir.
-- **Dok�mantasyon**: API ve model kullanimi i�in daha fazla �rnek eklenebilir.
+## 🔧 Geliştirme ve İyileştirme Önerileri
+- **Daha Fazla Test**: Uç senaryoları kapsayan testler eklenebilir.
+- **Loglama**: Yapılandırılmış loglama mekanizmaları güçlendirilebilir.
+- **Dokümantasyon**: API ve model kullanımı için daha fazla örnek eklenebilir.
 
 ---
 
-## ????? Katkida Bulunma
-Proje gelistirmelerine katkida bulunmak isterseniz, l�tfen bir **Pull Request** olusturun veya [issue a�in](#).
+## 👨‍💻 Katkıda Bulunma
+Proje geliştirmelerine katkıda bulunmak isterseniz, lütfen bir **Pull Request** oluşturun veya [issue açın](#).
