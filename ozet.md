@@ -33,5 +33,5 @@ https://github.com/okankoken/BIST_MLOps/blob/main/data/bist_tum_hisseler_temizle
 
 ### 4. Altyapı (Infrastructure)
 - 4.1. Altyapı olarak Docker container kullanınız. --> yapıldı
-- 4.2. Veri tabanı olarak mysql kullanınız. --> yapılacak
-- 4.3. Tahmin sonuçlarını veri tabanına yazınız. --> yapılacak
+- 4.2. Veri tabanı olarak mysql kullanınız. --> yapıldı
+- 4.3. Tahmin sonuçlarını veri tabanına yazınız. --> yapıldı
