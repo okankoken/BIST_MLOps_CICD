@@ -184,5 +184,7 @@ Tarayıcınızdan http://localhost:5000 adresine giderek detayları görüntüle
 
 ---
 
-### 🛠️ Yatırım Tavsiyesi Değildir !
+### ⚠️ Önemli Uyarı: Yatırım Tavsiyesi Değildir!
+
+Bu proje, yalnızca veri bilimi ve makine öğrenimi uygulamalarını göstermek amacıyla geliştirilmiştir. **Hiçbir şekilde yatırım tavsiyesi olarak değerlendirilmemelidir.** Hisse senetleri ve diğer finansal araçlarla ilgili kararlarınızı alırken bir finans uzmanına veya yetkili bir danışmana başvurmanız önerilir.
 ---
