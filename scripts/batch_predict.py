@@ -7,7 +7,7 @@ with open("/home/train/mlops4/BIST_MLops/data/bist_symbols_with_IS.txt", "r") as
 # API'ye POST istegi gonder
 response = requests.post(
     "http://localhost:8010/batch_predict",
-    json=stocks  # Liste olarak gonderiyoruz
+    json={"stocks": stocks}  # Listeyi dictionary icine alin
 )
 
 # Sonuclari yazdir
