@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
+from scripts.mlflow_logger import log_model_details
 
 # Veri yukleme
 file_path = "/home/train/mlops4/BIST_MLops/data/bist_tum_hisseler_temizlenmis.csv"
@@ -60,6 +61,27 @@ feature_importances = pd.DataFrame({
 
 print("Feature Importances:")
 print(feature_importances)
+
+
+# Model ve veri seti bilgileri
+model_name = "RandomForestRegressor"
+dataset_path = "/home/train/mlops4/BIST_MLops/data/bist_tum_hisseler_temizlenmis.csv"
+
+# MLflow'a loglama
+model_params = {
+    "n_estimators": best_model.get_params()["n_estimators"],
+    "max_depth": best_model.get_params()["max_depth"],
+    "min_samples_split": best_model.get_params()["min_samples_split"],
+    "min_samples_leaf": best_model.get_params()["min_samples_leaf"]
+}
+
+metrics = {
+    "mse": mse,
+    "mae": mae,
+    "r2": r2
+}
+
+log_model_details(model_params, metrics, model_name, dataset_path)
 
 # Modeli kaydetme
 model_path = "/home/train/mlops4/BIST_MLops/models/model_training.pkl"

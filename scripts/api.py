@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 import joblib
 import pandas as pd
 from scripts.mysql_writer import save_predictions_to_mysql
-from scripts.mlflow_logger import log_to_mlflow
 
 # FastAPI uygulamasi
 app = FastAPI()
@@ -42,8 +41,8 @@ def predict(stock_name: str):
     # Tahminleri MySQL'e kaydetme
     save_predictions_to_mysql(stock_name, stock_name_full, prediction)
 
-    # Tahminleri MLflow'a loglama
-    log_to_mlflow(stock_name, prediction)
+    # MLflow kontrolü
+    print("MLflow kontrol: Model izleniyor.")
 
     return {
         "stock": stock_name,
@@ -53,7 +52,8 @@ def predict(stock_name: str):
     }
 
 @app.post("/batch_predict")
-def batch_predict(stocks: list[str]):
+def batch_predict(payload: dict):
+    stocks = payload.get("stocks", [])
     results = []
     for stock_name in stocks:
         stock_data = df[df['Hisse'] == stock_name]
@@ -63,6 +63,5 @@ def batch_predict(stocks: list[str]):
         prediction = model.predict(input_data)[0]
         stock_name_full = stock_data["Adi"].iloc[0]
         save_predictions_to_mysql(stock_name, stock_name_full, prediction)
-        log_to_mlflow(stock_name, prediction)
         results.append({"stock": stock_name, "prediction": prediction})
     return {"predictions": results, "message": "Tahminler basariyla tamamlandi."}
